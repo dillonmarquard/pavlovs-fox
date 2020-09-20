@@ -25,19 +25,18 @@ def model():
 
 # In[20]:
 
-
+shielding = False
 # every possible move the AI can make
 def wavedash(x,y):
     global gamestate
-    controller.press_button(melee.Button.BUTTON_X)
-    gamestate = console.step()
+    #print(gamestate.player[2].action,"actionable before wavedash?")
+    shorthop(x)
     controller.release_all()
-    for x in range(JumpSquatframes[gamestate.player[2].character.name]-1):
-                gamestate = console.step()
-    controller.tilt_analog(melee.Button.BUTTON_MAIN,.7,.2)
-    controller.press_button(melee.Button.BUTTON_R)
-    gamestate=console.step()
+    airDodge(x,.35)
     controller.release_all()
+    for b in range(10):
+        gamestate=console.step()
+    #print(gamestate.player[2].action_frame)
 def airDodge(x,y):
     global gamestate
     controller.tilt_analog(melee.Button.BUTTON_MAIN,x,y)
@@ -159,7 +158,60 @@ def tilt(up,foward):
             console.step()
     controller.release_all()
 
-
+def StartSheilding():
+    shielding = True
+    controller.press_button(melee.Button.BUTTON_R)
+def StopSheilding():
+    shielding = False
+    controller.release_all()
+def rollR():
+    global gamestate
+    shielding = True
+    controller.press_button(melee.Button.BUTTON_R)
+    controller.tilt_analog(melee.Button.BUTTON_MAIN,1,.5)
+    gamestate = console.step()
+    gamestate = console.step()
+    gamestate = console.step()
+    controller.release_all()
+    for x in range(framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action)-3):
+        if framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action) == -1:
+            break
+        gamestate = console.step()
+    controller.release_all()
+    #print(gamestate.player[2].action,gamestate.player[2].action_frame)
+def rollL():
+    global gamestate
+    shielding = True
+    controller.press_button(melee.Button.BUTTON_R)
+    controller.tilt_analog(melee.Button.BUTTON_MAIN,0,.5)
+    gamestate = console.step()
+    gamestate = console.step()
+    gamestate = console.step()
+    controller.release_all()
+    for x in range(framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action)-3):
+        if framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action) == -1:
+            break
+        gamestate = console.step()
+    controller.release_all()
+    #print("actionable")
+    #print(gamestate.player[2].action,gamestate.player[2].action_frame)
+def spotdodge():
+    global gamestate
+    shielding = True
+    controller.press_button(melee.Button.BUTTON_R)
+    controller.tilt_analog(melee.Button.BUTTON_MAIN,.5,0)
+    gamestate = console.step()
+    gamestate = console.step()
+    gamestate = console.step()
+    controller.release_all()
+    for x in range(framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action)-3):
+        if framedata.last_roll_frame(gamestate.player[2].character,gamestate.player[2].action) == -1:
+            break
+        gamestate = console.step()
+    controller.release_all()
+    #print(gamestate.player[2].action_frame)
+    #print("actionable")
+    #print(gamestate.player[2].action,"End of SpotDodge?")
 # In[2]:
 
 
@@ -405,7 +457,7 @@ if not controller.connect():
     sys.exit(-1)
 print("Controller connected")
 loop=1
-x=6
+x=70
 # Main loop
 while True:
     # "step" to the next frame
@@ -439,11 +491,20 @@ while True:
             #loop+=1
             
             #print(framedata.frame_count(gamestate.player[2].character,enums.Action.FTILT_MID))
-            if loop == 80:
-                x=3
+            loop = 0
+            while True:
+                if gamestate.player[2].action.name == "STANDING":
+                    if loop ==0:
+                        #print(gamestate.player[2].action,gamestate.player[2].action_frame)
+                        spotdodge()
+                        wavedash(1,0)
+                        wavedash(0,0)
+                        loop=0
+                        continue
+                gamestate = console.step()
+            if loop == 1:
                 #wavedash()
-                #print(x)
-                dash(False,x/15)
+                #dash(False,x/15)
                 #controller.tilt_analog(melee.Button.BUTTON_MAIN,0,.5)
                 #for b in range(x-1):
                 #    gamestate= console.step()
@@ -456,15 +517,20 @@ while True:
                 #pivotR()
                 #sidebR()
                 #shorthop(0)
-                shorthop(.5)
-                airDodge(.3,.3)
+                #shorthop(.5)
+                #airDodge(0,.35)
+                #print(gamestate.player[2].action,gamestate.player[2].action_frame)
+                #wavedash(0,0)
+                #wavedash(0,0)
+                #rollR()
                 #tilt(False,True)
                 #print("after pivot stick")
                 #print(controller.current.main_stick)
-            elif loop == 160:
+                loop+=1
+            elif loop == 2:
                 #wavedash()
                 #print(x)
-                dash(True,x/15)
+                #dash(True,x/15)
                 #controller.tilt_analog(melee.Button.BUTTON_MAIN,1,.5)
                 #for b in range(x-1):
                 #    gamestate= console.step()
@@ -475,20 +541,22 @@ while True:
                 #print(controller.current.main_stick)
                 #pivotL()
                 #sidebL()
-                shorthop(.5)
-                airDodge(.7,.3)
+                #shorthop(.5)
+                #airDodge(1,.35)
                 #tilt(up,foward)
+                #wavedash(1,0)
+                #wavedash(1,0)
+                #rollL()
                 #shorthop(1)
                 #tilt(False,True)
                 #MoonWalk()
-                if x >= 15:
-                    x=6
+                if x >= 72:
+                    x=70
                 else:
                     x+=1
                 #print("after pivot stick")
                 #print(controller.current.main_stick)
                 loop=0
-            loop+=1
             
     else:
         melee.MenuHelper.menu_helper_simple(gamestate,
